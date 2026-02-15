@@ -34,34 +34,6 @@ delta_uf(s1, op, s2, r) ==
                                 (s1 \ {p1, p2}) \cup {[r |-> p2.r, X |-> p1.X \cup p2.X]}
                              }
 
-Ops_UFS == {<<"Find", i>>: i \in U} \cup {<<"Unite", i, j>>: i, j \in U} \cup {<<"SameSet", i, j>>: i, j \in U}
-Rets_UFS == U \cup {ACK} \cup {TRUE, FALSE}
-
-delta_ufs(s1, op, s2, r) ==
-               /\ s1 \in L_U /\ s2 \in L_U
-               /\ op \in Ops_UFS /\ r \in Rets_UFS
-               /\ \/ /\ op[1] = "Find"
-                     /\ \E p \in s1 :
-                          /\ op[2] \in p.X
-                          /\ p.r = r
-                     /\ s2 = s1
-                  \/ /\ op[1] = "Unite"
-                     /\ r = ACK
-                     /\ \E p1, p2 \in s1 :
-                          /\ op[2] \in p1.X
-                          /\ op[3] \in p2.X
-                          /\ s2 \in {
-                                (s1 \ {p1, p2}) \cup {[r |-> p1.r, X |-> p1.X \cup p2.X]},
-                                (s1 \ {p1, p2}) \cup {[r |-> p2.r, X |-> p1.X \cup p2.X]}
-                             }
-                  \/ /\ op[1] = "SameSet"
-                     /\ s2 = s1
-                     /\ \/ /\ r = TRUE
-                           /\ \E p \in s1: (op[2] \in p.X /\ op[3] \in p.X)
-                        \/ /\ r = FALSE
-                           /\ \A p \in s1: ~(op[2] \in p.X /\ op[3] \in p.X)
-
-
 Idems == {A \in [U -> U]: \A i \in U: A[A[i]] = A[i]}
 
 delta_uf_prime(s1, op, s2, r) ==
@@ -79,24 +51,6 @@ delta_uf_prime(s1, op, s2, r) ==
                                                  THEN s1[op[2]]
                                                  ELSE s1[i]]}
                                                  
-delta_ufs_prime(s1, op, s2, r) ==
-               /\ s1 \in Idems /\ s2 \in Idems
-               /\ op \in Ops_UFS /\ r \in Rets_UFS
-               /\ \/ /\ op[1] = "Find"
-                     /\ r = s1[op[2]]
-                     /\ s2 = s1
-                  \/ /\ op[1] = "Unite"
-                     /\ r = ACK
-                     /\ s2 \in {[i \in U |-> IF s1[i] = s1[op[2]]
-                                                 THEN s1[op[3]]
-                                                 ELSE s1[i]],
-                                 [i \in U |-> IF s1[i] = s1[op[3]]
-                                                 THEN s1[op[2]]
-                                                 ELSE s1[i]]}
-                  \/ /\ op[1] = "SameSet"
-                     /\ r = IF s1[op[2]] = s1[op[3]] THEN TRUE ELSE FALSE
-                     /\ s2 = s1
-
 f(P) == [i \in U |-> LET p == CHOOSE q \in P : i \in q.X IN p.r]
 
 LEMMA UniqueBlock == \A P \in L_U: \A i \in U: \A p, q \in P: i \in p.X /\ i \in q.X => p = q
@@ -156,28 +110,6 @@ LEMMA PartitionReshaping == \A P \in L_U: \A p, q \in P: (P \ {p, q}) \cup {[r |
     BY <1>1 DEF L_U
   <1> QED
     BY DEF L_U
-
-LEMMA Ops_UFSubset == Ops_UF \subseteq Ops_UFS
-    BY DEF Ops_UF, Ops_UFS
-
-LEMMA Rets_UFubset == Rets_UF \subseteq Rets_UFS
-    BY DEF Rets_UF, Rets_UFS
-
-
-LEMMA UF_UFS_Same == \A s1, s2 \in L_U: \A r \in Rets_UF: \A o \in Ops_UF: delta_uf(s1, o, s2, r) = delta_ufs(s1, o, s2, r)
-    BY Ops_UFSubset, Rets_UFubset DEF delta_uf, delta_ufs, Ops_UF, Rets_UF
-
-LEMMA UF_UFS_prime_Same == \A s1, s2 \in Idems: \A r \in Rets_UF: \A o \in Ops_UF: delta_uf_prime(s1, o, s2, r) = delta_ufs_prime(s1, o, s2, r)
-    <1> SUFFICES ASSUME NEW o \in Ops_UF, NEW s1 \in Idems, NEW s2 \in Idems, NEW r \in Rets_UF
-        PROVE delta_uf_prime(s1, o, s2, r) = delta_ufs_prime(s1, o, s2, r)
-        OBVIOUS
-    <1>1. CASE o[1] = "Find"
-        BY <1>1, Ops_UFSubset, Rets_UFubset DEF delta_ufs_prime, delta_uf_prime
-    <1>2. CASE o[1] = "Unite"
-        BY <1>2, Ops_UFSubset, Rets_UFubset DEF delta_ufs_prime, delta_uf_prime
-    <1> QED
-        BY <1>1, <1>2 DEF Ops_UF
-        
 
 
 THEOREM FunctionInjective == \A P, Q \in L_U: f(P) = f(Q) => P = Q
@@ -509,130 +441,7 @@ THEOREM FunctionRespectsDeltaUF ==
   <1> QED
     BY <1>1, <1>2
     
-THEOREM FunctionRespectsDeltaUFS == 
-               \A s1, s2 \in L_U: \A o \in Ops_UFS: \A r \in Rets_UFS:
-                    delta_ufs(s1, o, s2, r) <=> delta_ufs_prime(f(s1), o, f(s2), r)
-  <1> SUFFICES ASSUME NEW s1 \in L_U, NEW s2 \in L_U,
-                      NEW o \in Ops_UFS,
-                      NEW r \in Rets_UFS
-               PROVE  delta_ufs(s1, o, s2, r) <=> delta_ufs_prime(f(s1), o, f(s2), r)
-    OBVIOUS
-  <1>1. delta_ufs(s1, o, s2, r) => delta_ufs_prime(f(s1), o, f(s2), r)
-    <2> SUFFICES ASSUME delta_ufs(s1, o, s2, r)
-                 PROVE  delta_ufs_prime(f(s1), o, f(s2), r)
-      OBVIOUS
-    <2>1. CASE o[1] = "Find"
-        <3> r \in Rets_UF /\ o \in Ops_UF
-            BY <2>1, Ops_UFSubset, Rets_UFubset DEF delta_ufs, L_U, Rets_UF, Ops_UF, Ops_UFS
-        <3> QED
-            BY <2>1, UF_UFS_Same, UF_UFS_prime_Same, FunctionWellDefined, FunctionRespectsDeltaUF
-    <2>2. CASE o[1] = "Unite"
-        <3> r \in Rets_UF /\ o \in Ops_UF
-            BY <2>2, Ops_UFSubset, Rets_UFubset DEF delta_ufs, L_U, Rets_UF, Ops_UF, Ops_UFS
-        <3> QED
-            BY <2>2, UF_UFS_Same, UF_UFS_prime_Same, FunctionWellDefined, FunctionRespectsDeltaUF
-    <2>3. CASE o[1] = "SameSet"
-        <3> o \in {<<"SameSet", i, j>> : i, j \in U}
-            BY <2>3 DEF Ops_UFS
-        <3> (r = TRUE \/ r = FALSE) /\ o[2] \in U /\ o[3] \in U /\ s1 = s2
-            BY <2>3 DEF delta_ufs
-        <3>1. CASE r = TRUE
-            <4> PICK p \in s1: o[2] \in p.X /\ o[3] \in p.X
-                BY <2>3, <3>1 DEF delta_ufs
-            <4> f(s1)[o[2]] = f(s1)[o[3]]
-                BY MapsToRep
-            <4> QED
-                BY <2>3, <3>1, FunctionWellDefined DEF delta_ufs_prime
-        <3>2. CASE r = FALSE 
-            <4> PICK p1, p2 \in s1: o[2] \in p1.X /\ o[3] \in p2.X
-                BY DEF L_U
-            <4> f(s1)[o[2]] # f(s1)[o[3]]
-                BY <2>3, <3>2, MapsToRep, RepsUnique DEF delta_ufs
-            <4> QED
-                BY <2>3, <3>2, FunctionWellDefined DEF delta_ufs_prime
-        <3> QED
-            BY <3>1, <3>2 DEF delta_ufs
-    <2>4. QED
-      BY <2>1, <2>2, <2>3 DEF Ops_UFS
-  <1>2. ~delta_ufs(s1, o, s2, r) => ~delta_ufs_prime(f(s1), o, f(s2), r)
-    <2> SUFFICES ASSUME ~delta_ufs(s1, o, s2, r)
-                 PROVE  ~delta_ufs_prime(f(s1), o, f(s2), r)
-      OBVIOUS
-    <2>h. ~(\/ /\ o[1] = "Find"
-               /\ \E p \in s1 : /\ o[2] \in p.X
-                                /\ p.r = r
-               /\ s2 = s1
-            \/ /\ o[1] = "Unite"
-               /\ r = ACK
-               /\ \E p1, p2 \in s1 :
-                   /\ o[2] \in p1.X
-                   /\ o[3] \in p2.X
-                   /\ s2 \in {(s1 \ {p1, p2}) \cup {[r |-> p1.r, X |-> p1.X \cup p2.X]},
-                              (s1 \ {p1, p2}) \cup {[r |-> p2.r, X |-> p1.X \cup p2.X]}}
-            \/ /\ o[1] = "SameSet"
-               /\ s2 = s1
-               /\ \/ /\ r = TRUE
-                     /\ \E p \in s1: (o[2] \in p.X /\ o[3] \in p.X)
-                  \/ /\ r = FALSE
-                     /\ \A p \in s1: ~(o[2] \in p.X /\ o[3] \in p.X))
-        BY DEF delta_ufs
-    <2>1. CASE o[1] = "Find"
-        <3> o \in Ops_UF
-            BY <2>1, <2>h DEF Ops_UF, Ops_UFS
-        <3>1. CASE r \in Rets_UF /\ o \in Ops_UF        
-            BY <2>1, <3>1, UF_UFS_Same, UF_UFS_prime_Same, FunctionWellDefined, FunctionRespectsDeltaUF DEF Rets_UF
-        <3>2. CASE r \notin Rets_UF
-            <4> r \notin U
-                BY <2>1, <3>2, TFUDef DEF Rets_UF, Rets_UFS
-            <4> r # f(s1)[o[2]]
-                BY <2>1, FunctionWellDefined DEF delta_ufs_prime, Idems, Ops_UF
-            <4> QED
-                BY <2>1, <2>h DEF delta_ufs_prime
-        <3> QED
-            BY <3>1, <3>2
-    <2>2. CASE o[1] = "Unite"
-        <3> o \in Ops_UF
-            BY <2>2, <2>h DEF Ops_UF, Ops_UFS
-        <3>1. CASE r \in Rets_UF /\ o \in Ops_UF        
-            BY <2>2, <3>1, UF_UFS_Same, UF_UFS_prime_Same, FunctionWellDefined, FunctionRespectsDeltaUF DEF Rets_UF
-        <3>2. CASE r \notin Rets_UF
-            <4> r # ACK
-                BY <2>2, <3>2 DEF Rets_UF, Rets_UFS
-            <4> QED
-                BY <2>2, <2>h DEF delta_ufs_prime
-        <3> QED
-            BY <3>1, <3>2
-    <2>3. CASE o[1] = "SameSet"
-        <3> o \in {<<"SameSet", i, j>> : i, j \in U}
-            BY <2>3, <2>h DEF Ops_UFS
-        <3> o[2] \in U /\ o[3] \in U
-            BY <2>3 DEF delta_ufs
-        <3>1. CASE r = TRUE /\ s1 = s2
-            <4> PICK p1, p2 \in s1: o[2] \in p1.X /\ o[3] \in p2.X
-                BY DEF L_U
-            <4> f(s1)[o[2]] # f(s1)[o[3]]
-                BY <2>3, <3>1, <2>h, MapsToRep, RepsUnique DEF delta_ufs
-            <4> QED
-                BY <2>3, <3>1, FunctionWellDefined DEF delta_ufs_prime
-        <3>2. CASE r = FALSE /\ s1 = s2
-            <4> PICK p \in s1: o[2] \in p.X /\ o[3] \in p.X
-                BY <2>3, <3>2 DEF delta_ufs
-            <4> f(s1)[o[2]] = f(s1)[o[3]]
-                BY MapsToRep
-            <4> QED
-                BY <2>3, <3>2, FunctionWellDefined DEF delta_ufs_prime
-        <3>3. CASE r \notin {TRUE, FALSE}
-            BY <2>3, <3>3 DEF delta_ufs_prime
-        <3>4. CASE s1 # s2
-            BY <2>3, <3>4, FunctionInjective DEF delta_ufs_prime
-        <3> QED
-            BY <3>1, <3>2, <3>3, <3>4 DEF delta_ufs
-    <2>4. QED
-      BY <2>1, <2>2, <2>3 DEF Ops_UFS
-  <1> QED
-    BY <1>1, <1>2
-
 =============================================================================
 \* Modification History
-\* Last modified Tue Feb 10 11:19:30 CST 2026 by karunram
+\* Last modified Sun Feb 15 18:02:57 EST 2026 by karunram
 \* Created Tue Jun 03 05:52:54 EDT 2025 by karunram
