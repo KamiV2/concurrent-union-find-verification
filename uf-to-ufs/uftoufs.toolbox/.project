@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>uftoufs</name>
+	<comment></comment>
+	<projects>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>toolbox.builder.TLAParserBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>toolbox.natures.TLANature</nature>
+	</natures>
+	<linkedResources>
+		<link>
+			<name>SameSetImplementation.tla</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/SameSetImplementation.tla</locationURI>
+		</link>
+		<link>
+			<name>SameSetInv.tla</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/SameSetInv.tla</locationURI>
+		</link>
+		<link>
+			<name>SameSetTypeOK.tla</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/SameSetTypeOK.tla</locationURI>
+		</link>
+		<link>
+			<name>TypeEquivalence.tla</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/TypeEquivalence.tla</locationURI>
+		</link>
+		<link>
+			<name>uf.tla</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/uf.tla</locationURI>
+		</link>
+	</linkedResources>
+</projectDescription>
