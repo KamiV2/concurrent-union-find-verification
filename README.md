@@ -1,4 +1,4 @@
-# concurrent-union-find-verification
+# Concurrent union-find verification
 This repository contains the TLA+ files which verify the strong linearizability of the Jayanti-Tarjan randomized flipping algorithm for the UF problem, as well as various reductions to the UFS problem.
 
 - `jtunionfind/` contains our verification that the randomized flipping concurrent union find algorithm due to Jayanti and Tarjan is strongly linearizable
